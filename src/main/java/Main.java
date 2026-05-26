@@ -24,15 +24,14 @@ public class Main {
 
                 System.out.println(input + ": command not found");
 
-
-	    }
-
-            System.out.println(input + ": command not found");
+            }
 
         }
 
     }
 
- }
+}
+
+
 
 
