@@ -1,5 +1,4 @@
 import java.io.File;
-import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -21,9 +20,21 @@ public class Main {
         COMMANDS.put("exit", args -> System.exit(0));
         COMMANDS.put("echo", args -> System.out.println(String.join(" ", args)));
         COMMANDS.put("type", this::typeCommand);
-        COMMANDS.put("pwd",  args -> System.out.println(
+        COMMANDS.put("pwd", args -> System.out.println(
             Paths.get("").toAbsolutePath().normalize().toString()
         ));
+        COMMANDS.put("cd", args -> {
+            if (args.length != 1) {
+                System.out.println("cd: missing argument");
+                return;
+            }
+            File dir = new File(args[0]);
+            if (!dir.exists() || !dir.isDirectory()) {
+                System.out.println("cd: " + args[0] + ": No such file or directory");
+                return;
+            }
+            System.setProperty("user.dir", dir.toPath().toAbsolutePath().normalize().toString());
+        });
     }
 
     public void run() throws Exception {
