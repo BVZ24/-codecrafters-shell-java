@@ -28,9 +28,12 @@ public class Main {
                 System.out.println("cd: missing argument");
                 return;
             }
-            File dir = new File(args[0]);
+            String target = args[0].equals("~")
+                ? System.getenv("HOME")
+                : args[0];
+            File dir = new File(target);
             if (!dir.isAbsolute()) {
-                dir = new File(System.getProperty("user.dir"), args[0]);
+                dir = new File(System.getProperty("user.dir"), target);
             }
             dir = dir.toPath().normalize().toFile();
             if (!dir.exists() || !dir.isDirectory()) {
