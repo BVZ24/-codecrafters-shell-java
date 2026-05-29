@@ -29,11 +29,15 @@ public class Main {
                 return;
             }
             File dir = new File(args[0]);
+            if (!dir.isAbsolute()) {
+                dir = new File(System.getProperty("user.dir"), args[0]);
+            }
+            dir = dir.toPath().normalize().toFile();
             if (!dir.exists() || !dir.isDirectory()) {
                 System.out.println("cd: " + args[0] + ": No such file or directory");
                 return;
             }
-            System.setProperty("user.dir", dir.toPath().toAbsolutePath().normalize().toString());
+            System.setProperty("user.dir", dir.getAbsolutePath());
         });
     }
 
