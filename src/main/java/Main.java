@@ -21,7 +21,7 @@ public class Main {
         COMMANDS.put("echo", args -> System.out.println(String.join(" ", args)));
         COMMANDS.put("type", this::typeCommand);
         COMMANDS.put("pwd", args -> System.out.println(
-            Paths.get("").toAbsolutePath().normalize().toString()
+            System.getProperty("user.dir")
         ));
         COMMANDS.put("cd", args -> {
             if (args.length != 1) {
