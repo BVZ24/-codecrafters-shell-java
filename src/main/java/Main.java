@@ -1,6 +1,4 @@
-package base;
-
-import java.io.IOException;
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -8,44 +6,35 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
-public class Tauminal {
-    Stage stage;
-    Map<String, Integer> variables;
-    private final Map<String, Procedure> COMMANDS = new HashMap<>();
-    private final Scanner scanner = new Scanner(System.in); // ✅ Created once
+public class Main {
 
     @FunctionalInterface
     interface Procedure {
         void run(String[] args) throws Exception;
     }
 
-    public Tauminal() {
-        this.stage = Stage.LOOP;
-        this.variables = new HashMap<>(); // ✅ Mutable map, set() won't crash
+    private final Scanner scanner = new Scanner(System.in);
+    private final Map<String, Procedure> COMMANDS = new HashMap<>();
+    private final Map<String, Integer> variables = new HashMap<>();
+
+    public Main() {
         COMMANDS.put("exit", args -> System.exit(0));
         COMMANDS.put("echo", args -> System.out.println(String.join(" ", args)));
         COMMANDS.put("type", this::typeCommand);
-        COMMANDS.put("pwd", args -> System.out.println(
-            Paths.get("").toAbsolutePath().normalize().toString() // ✅ pwd
+        COMMANDS.put("pwd",  args -> System.out.println(
+            Paths.get("").toAbsolutePath().normalize().toString()
         ));
     }
 
     public void run() throws Exception {
-        while (stage == Stage.LOOP) {
-            stage = Stage.READ;
-            String input = read();
-            stage = Stage.EXECUTE;
+        while (true) {
+            System.out.print("$ ");
+            String input = scanner.nextLine();
             execute(input);
-            stage = Stage.LOOP;
         }
     }
 
-    public String read() {
-        System.out.print("$ ");
-        return scanner.nextLine(); // ✅ Reuses the single Scanner instance
-    }
-
-    public void execute(String command) throws Exception {
+    private void execute(String command) throws Exception {
         String[] tokens = command.split(" ");
         String commandName = tokens[0];
         String[] commandArgs = Arrays.copyOfRange(tokens, 1, tokens.length);
@@ -55,18 +44,17 @@ public class Tauminal {
             return;
         }
 
-        // ✅ Use ProcessBuilder instead of Runtime.exec
-        String path = Main.getPath(commandName, Files::isExecutable);
+        String path = findInPath(commandName);
         if (path == null) {
             System.out.println(commandName + ": command not found");
         } else {
             ProcessBuilder pb = new ProcessBuilder(tokens);
-            pb.inheritIO();                    // ✅ Handles stderr too
-            pb.start().waitFor();              // ✅ Waits for process to finish
+            pb.inheritIO();
+            pb.start().waitFor();
         }
     }
 
-    void typeCommand(String[] args) {
+    private void typeCommand(String[] args) {
         if (args.length != 1) {
             System.out.println("Invalid argument");
             return;
@@ -76,16 +64,27 @@ public class Tauminal {
             System.out.println(target + " is a shell builtin");
             return;
         }
-        String path = Main.getPath(target, Files::isExecutable);
+        String path = findInPath(target);
         if (path != null) System.out.println(target + " is " + path);
         else System.out.println(target + ": not found");
     }
 
-    public void set(String name, int value) {
-        variables.put(name, value); // ✅ remove() before put() was redundant anyway
+    private static String findInPath(String cmd) {
+        String pathEnv = System.getenv("PATH");
+        if (pathEnv == null) return null;
+        for (String dir : pathEnv.split(":")) {
+            File file = new File(dir, cmd);
+            if (file.exists() && file.canExecute()) {
+                return file.getAbsolutePath();
+            }
+        }
+        return null;
     }
 
-    public int get(String name) {
-        return variables.get(name);
+    public void set(String name, int value) { variables.put(name, value); }
+    public int get(String name) { return variables.get(name); }
+
+    public static void main(String[] args) throws Exception {
+        new Main().run();
     }
 }
